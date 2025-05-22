@@ -2,7 +2,6 @@
 package FLB;
 
 import java.awt.Color;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -10,7 +9,6 @@ import javax.swing.Timer;
 
 
 import javax.swing.ImageIcon;
-import javax.swing.JLabel;
 import javax.swing.JPanel;
 
 import java.awt.Dimension;
@@ -18,14 +16,8 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.awt.image.BufferedImage;
-import java.lang.reflect.Array;
-
-import javax.swing.ImageIcon;
-import javax.swing.JPanel;
 
 public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	
@@ -62,7 +54,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
     Timer gameLoop;
     int v_roi = 0;//vận tốc rơi của chim
     int p = 1; //trọng lực
-    int keySpace = -12;//giá trị nút bấm space
+//    int keySpace = -12;//giá trị nút bấm space
     
     //các pipes(ống)
     int pipeX = 360; //vị trí ống xuất hiện

@@ -13,12 +13,8 @@ public class App {
 	    frame.setResizable(false);
 	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	    
-
-	    JButton bt = new JButton();
-	    bt.setBounds(10, 20, 30, 50);
 	    FlappyBird flb = new FlappyBird();
-	    
-	    frame.add(bt);
+	   
 	    frame.add(flb);
 	    frame.pack();
 	    frame.setVisible(true);
