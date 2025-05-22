@@ -1,5 +1,8 @@
 package FLB;
 
+import java.awt.CardLayout;
+
+import javax.swing.JButton;
 import javax.swing.JFrame;
 
 public class App {
@@ -9,9 +12,13 @@ public class App {
 	    frame.setLocationRelativeTo(null);
 	    frame.setResizable(false);
 	    frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+	    
 
+	    JButton bt = new JButton();
+	    bt.setBounds(10, 20, 30, 50);
 	    FlappyBird flb = new FlappyBird();
 	    
+	    frame.add(bt);
 	    frame.add(flb);
 	    frame.pack();
 	    frame.setVisible(true);

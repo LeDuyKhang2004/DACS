@@ -67,8 +67,8 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
     //các pipes(ống)
     int pipeX = 360; //vị trí ống xuất hiện
     int pipeY; //Tọa độ Y của ống trên (âm để đẩy ống lên trên)
-    int pipeWidth = 64;
-    int pipeHeight = 512;
+    int pipeWidth = 64; //chiều rộng của ống
+    int pipeHeight = 512;// chiều cao của ống
     
     class Pipe{
     	int x = pipeX;
@@ -76,7 +76,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
     	int width = pipeWidth;
     	int height = pipeHeight;
     	Image img;
-    	Boolean passed = false;
+    	Boolean passed = false;// đánh dấu chim đã qua 1 ống 
     	
     	Pipe(Image img){
     		this.img = img;
@@ -90,8 +90,30 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
     
     //Dừng lại game
     Boolean gameOver = false;
+    
+    //Tính điểm
+    double score = 0; 
+    
+    //Tăng thời gian ống chạy nhanh hơn
+    int pipesPassed = 0; //số ống đã vượt qua
+    int pipeSpeed = 4; //tốc độ ban đầu của ống
+    int maxPipeSpeed = 10; // Giới hạn tốc độ ống
+    int pipeInterval = 1500;       // Thời gian xuất hiện ống (ms)
+    int lastSpeedUpdate = 0; // để nhớ lần cuối đã tăng tốc độ
+
+    
+    
+    //Va chạm ống
+    public boolean collision(Bird a, Pipe b) {
+    	return a.x < b.x + b.width &&
+    	           a.x + a.width > b.x &&
+    	           a.y < b.y + b.height &&
+    	           a.y + a.height > b.y;
+    }
+    
 
      FlappyBird() {
+    	 
         setPreferredSize(new Dimension(360, 640));
         setFocusable(true);//tiếp nhận các sự kiện của phím 
         addKeyListener(this); //kiểm tra 3 hàm của keyList khi nhấn phím
@@ -133,9 +155,36 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 //                	pipeX = 360;
 //                	pipeY = random.nextInt(200)-200;
 //                }
+                
+                //di chuyển các ống sang trái
                 for (int i = 0; i < pipes.size(); i++) {
                     Pipe pipe = pipes.get(i);
-                    pipe.x -= 4;
+                    pipe.x -= pipeSpeed; // thời gian trôi của ống
+                    
+                    
+                    // Nếu chim đã bay qua ống và chưa được đánh dấu
+                    if (!pipe.passed && pipe.x + pipe.width < bird.x) {
+                        pipe.passed = true;
+                        score += 0.5;
+                        pipesPassed++;
+
+                        // Chỉ tăng tốc 1 lần mỗi khi đạt mốc mới
+                        if (pipesPassed != 0 && pipesPassed % 8 == 0 &&  pipesPassed != lastSpeedUpdate) { //% 8 là 2 cặp ống(4 ống) vì mỗi ống là 0,5 nên 
+                            if (pipeSpeed < maxPipeSpeed) {
+                                pipeSpeed++; // tăng tốc độ ống
+                                pipeInterval = Math.min(2000, pipeInterval + 150); // giãn khoảng cách tối đa 2s
+                                placePipesTimer.setDelay(pipeInterval); // cập nhật thời gian gọi ống
+                                System.out.println("Tốc độ: " + pipeSpeed + " | Khoảng cách giãn: " + pipeInterval);
+                            }
+                            lastSpeedUpdate = pipesPassed;
+                        }
+                    }
+ 
+                    
+                    //Xử lí khi va chạm ống thì game dừng
+                    if(collision(bird, pipe)) {
+                    	gameOver = true;
+                    }
                 }
 
                 // Xoá ống đã đi qua khỏi màn hình
@@ -164,13 +213,25 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
     public void draw(Graphics g){
         g.drawImage(backgroundImg, 0, 0, 360, 640, null);
         g.drawImage(bird.img, bird.x, bird.y, bird.width, bird.height, null);
-        g.drawImage(topPipImg, pipeX, pipeY, pipeWidth, pipeHeight, null);
         
         //vẽ các ống 
         for(int i = 0; i<pipes.size(); i++) {
         	Pipe pipe = pipes.get(i);
         	g.drawImage(pipe.img, pipe.x, pipe.y, pipe.width, pipe.height, null);
         }
+        
+     // Hiển thị điểm số
+        g.setColor(Color.WHITE);
+        g.setFont(g.getFont().deriveFont(40f)); // font size 18
+        
+        // Vẽ score (điểm)
+        g.drawString("" + (int)score, 180, 80);
+        
+//        // Vẽ số ống đã vượt (pipesPassed)
+//        g.drawString("Pipes Passed: " + pipesPassed, 10, 60);
+//        
+//        // Vẽ tốc độ ống
+//        g.drawString("Pipe Speed: " + pipeSpeed, 10, 90);
     }
     
     //Tạo ống
@@ -191,6 +252,8 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
     	pipes.add(botPipe);
     	
     }
+    
+    
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		
