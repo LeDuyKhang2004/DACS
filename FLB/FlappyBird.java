@@ -9,6 +9,7 @@ import javax.swing.Timer;
 
 
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JPanel;
 
 import java.awt.Dimension;
@@ -20,6 +21,9 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 
 public class FlappyBird extends JPanel implements ActionListener,KeyListener{
+	
+	JButton startButton;
+	JButton record;
 	
     Image backgroundImg;
     Image birdImg;
@@ -83,6 +87,8 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
     //Dừng lại game
     Boolean gameOver = false;
     
+    //
+    Boolean isGameStarted = false;
     //Tính điểm
     double score = 0; 
     
@@ -103,6 +109,30 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
     	           a.y + a.height > b.y;
     }
     
+    public void startGame() {
+    	if(isGameStarted = true);
+        // Reset trạng thái game
+        bird.y = birdY;
+        v_roi = 0;
+        pipes.clear();
+        gameOver = false;
+        score = 0;
+        pipesPassed = 0;
+        pipeSpeed = 4;
+        pipeInterval = 1500;
+        lastSpeedUpdate = 0;
+
+        // Reset Timer
+        placePipesTimer.setDelay(pipeInterval);
+        placePipesTimer.start();
+        gameLoop.start();
+
+        // Ẩn nút Start sau khi nhấn
+        startButton.setVisible(false);
+
+        // Gọi repaint để cập nhật lại màn hình
+        repaint();
+    }
 
      FlappyBird() {
     	 
@@ -125,7 +155,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 				placePipes();
 			}
 		});
-        placePipesTimer.start();
+//        placePipesTimer.start();
      
         //game timer
         gameLoop = new Timer(20, new ActionListener() {
@@ -194,9 +224,28 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
                 	gameOver = true;
                 	System.out.println("Game over");
                 }
+                
+                if (gameOver) {
+                    placePipesTimer.stop();
+                    gameLoop.stop();
+                    startButton.setVisible(true); // Hiện lại nút Start
+                    isGameStarted = false; 
+                }
+
             }
         });
-        gameLoop.start();
+//        gameLoop.start();
+     // Nút Start
+        startButton = new JButton("Start Game");
+        startButton.setBounds(120, 300, 120, 40); // Tuỳ chỉnh vị trí và kích thước
+        startButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                startGame();
+            }
+        });
+        this.setLayout(null); // Bắt buộc để setBounds hoạt động
+        this.add(startButton);
      }
     public void paintComponent(Graphics g){
         super.paintComponent(g);
@@ -253,6 +302,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	
 	@Override
 	public void keyPressed(KeyEvent e) {
+		if (!isGameStarted) return; 
 		if(e.getKeyCode() == KeyEvent.VK_SPACE) {
 			v_roi = -9;
 		}
