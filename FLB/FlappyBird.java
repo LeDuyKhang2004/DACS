@@ -1,300 +1,366 @@
-	
+
 package FLB;
 
 import java.awt.Color;
-import java.util.ArrayList;
-import java.util.Random;
-
-import javax.swing.Timer;
-
-
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JPanel;
-
 import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.FontFormatException;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
+import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JPanel;
+import javax.swing.Timer;
 
 public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	
 	JButton startButton;
-	JButton record;
 	
-    Image backgroundImg;
-    Image birdImg;
-    Image topPipImg;
-    Image bottomImg;
-    
-    //Birds
-    int birdX = 360/8;//Vị trí của con chim cánh mép trái cửa sổ 45px
-    int birdY = 640/2;//cách mép trên cửa sổ 
-    int birdWidth = 34;
-    int birdHeight = 24;
-    
-    class Bird{
-    	int x = birdX;
-    	int y = birdY;
-    	int width = birdWidth;
-    	int height = birdHeight;
-    	Image img;
-    	
-    	Bird(Image img){
-    		this.img=img;  
-    	}
-    }
-    
-    
-    Bird bird;
-    
-    //vòng lặp ống 
-    Timer placePipesTimer;
-    
-    //vòng lặp game
-    Timer gameLoop;
-    int v_roi = 0;//vận tốc rơi của chim
-    int p = 1; //trọng lực
-//    int keySpace = -12;//giá trị nút bấm space
-    
-    //các pipes(ống)
-    int pipeX = 360; //vị trí ống xuất hiện
-    int pipeY; //Tọa độ Y của ống trên (âm để đẩy ống lên trên)
-    int pipeWidth = 64; //chiều rộng của ống
-    int pipeHeight = 512;// chiều cao của ống
-    
-    class Pipe{
-    	int x = pipeX;
-    	int y = pipeY;
-    	int width = pipeWidth;
-    	int height = pipeHeight;
-    	Image img;
-    	Boolean passed = false;// đánh dấu chim đã qua 1 ống 
-    	
-    	Pipe(Image img){
-    		this.img = img;
-    	}
-    }
-    //Mảng chứa ống
-    ArrayList<Pipe> pipes;
-    
-    //Random ống
-    Random random = new Random();
-    
-    //Dừng lại game
-    Boolean gameOver = false;
-    
-    //
-    Boolean isGameStarted = false;
-    //Tính điểm
-    double score = 0; 
-    
-    //Tăng thời gian ống chạy nhanh hơn
-    int pipesPassed = 0; //số ống đã vượt qua
-    int pipeSpeed = 4; //tốc độ ban đầu của ống
-    int maxPipeSpeed = 10; // Giới hạn tốc độ ống
-    int pipeInterval = 1500;       // Thời gian xuất hiện ống (ms)
-    int lastSpeedUpdate = 0; // để nhớ lần cuối đã tăng tốc độ
+	Image fastUp, fastMid, fastDown;
+	Image slowUp, slowMid, slowDown;
+	Image backgroundImg, birdImg, topPipImg, bottomImg;
 
-    
-    
-    //Va chạm ống
-    public boolean collision(Bird a, Pipe b) {
-    	return a.x < b.x + b.width &&
-    	           a.x + a.width > b.x &&
-    	           a.y < b.y + b.height &&
-    	           a.y + a.height > b.y;
-    }
-    
-    public void startGame() {
-    	if(isGameStarted = true);
-        // Reset trạng thái game
-        bird.y = birdY;
-        v_roi = 0;
-        pipes.clear();
-        gameOver = false;
-        score = 0;
-        pipesPassed = 0;
-        pipeSpeed = 4;
-        pipeInterval = 1500;
-        lastSpeedUpdate = 0;
+	boolean restarting = false;
 
-        // Reset Timer
-        placePipesTimer.setDelay(pipeInterval);
-        placePipesTimer.start();
-        gameLoop.start();
+	int maxScore;
 
-        // Ẩn nút Start sau khi nhấn
-        startButton.setVisible(false);
+	
+	// Birds
+	int birdX = 45; // Vị trí của con chim cánh mép trái cửa sổ 45px
+	int birdY = 320; // Vị trí của con chim cánh mép trên cửa sổ 320px
+	int birdWidth = 34;
+	int birdHeight = 24;
+	
+	class Bird{
+		int x = birdX;
+		int y = birdY;
+		int width = birdWidth;
+		int height = birdHeight;
+		Image img;
+		
+		Bird(Image img){
+			this.img=img;  
+		}
+	}
+	
+	
+	Bird bird;
+	
+	// Vòng lặp ống 
+	Timer placePipesTimer;
+	
+	// Vòng lặp game
+	Timer gameLoop;
+	int v_roi = 0;// Vận tốc rơi của chim
+	int p = 1; // Trọng lực
+	
+	// Các pipes(ống)
+	int pipeX = 360; // Vị trí ống xuất hiện
+	int pipeY; // Tọa độ Y của ống trên (âm để đẩy ống lên trên)
+	int pipeWidth = 64; //Chiều rộng của ống
+	int pipeHeight = 512;// Chiều cao của ống
+	
+	class Pipe{
+		int x = pipeX;
+		int y = pipeY;
+		int width = pipeWidth;
+		int height = pipeHeight;
+		Image img;
+		Boolean passed = false;// đánh dấu chim đã qua 1 ống 
+		
+		Pipe(Image img){
+			this.img = img;
+		}
+	}
+	//Mảng chứa ống
+	ArrayList<Pipe> pipes;
+	
+	//Dừng lại game
+	Boolean gameOver = false;
+	
+	//
+	Boolean isGameStarted = false;
+	//Tính điểm
+	double score = 0; 
+	
+	//Tăng thời gian ống chạy nhanh hơn
+	int pipesPassed = 0; //số ống đã vượt qua
+	int pipeSpeed = 7; //tốc độ ban đầu của ống
+	int maxPipeSpeed = 20; // Giới hạn tốc độ ống
+	int pipeInterval = 1500;       // Thời gian xuất hiện ống (ms)
+	int lastSpeedUpdate = 0; // để nhớ lần cuối đã tăng tốc độ
 
-        // Gọi repaint để cập nhật lại màn hình
-        repaint();
-    }
+	
+	
+	public void startGame() {
+		if(isGameStarted = true);
+		// Reset trạng thái game
+		bird.y = birdY;
+		v_roi = 0;
+		pipes.clear();
+		gameOver = false;
+		score = 0;
+		pipesPassed = 0;
+		pipeSpeed = 4;
+		pipeInterval = 1500;
+		lastSpeedUpdate = 0;
 
-     FlappyBird() {
-    	 
-        setPreferredSize(new Dimension(360, 640));
-        setFocusable(true);//tiếp nhận các sự kiện của phím 
-        addKeyListener(this); //kiểm tra 3 hàm của keyList khi nhấn phím
+		// Lấy maxScore
 
-        backgroundImg = new ImageIcon(getClass().getResource("flappybirdbg.png")).getImage();//Tải hình ảnh lên trên Frame
-        birdImg = new ImageIcon(getClass().getResource("flappybird.png")).getImage();
-        topPipImg = new ImageIcon(getClass().getResource("toppipe.png")).getImage();
-        bottomImg = new ImageIcon(getClass().getResource("bottompipe.png")).getImage();
-        bird = new Bird(birdImg);
-        
-        //thời gian ống xuất hiện
-        pipes = new ArrayList<Pipe>(); //tạo 1 mảng trống để chứa các ống
-        placePipesTimer = new Timer(1500, new ActionListener() { // phải gọi sự kiện để ống được thực hiện - 1,5s sẽ gọi ống 1 lần
+		// Reset Timer
+		placePipesTimer.setDelay(pipeInterval);
+		placePipesTimer.start();
+		gameLoop.start();
+
+		// Ẩn nút Start sau khi nhấn
+		startButton.setVisible(false);
+
+		// Gọi repaint để cập nhật lại màn hình
+		repaint();
+	}
+
+	 FlappyBird() {
+
+		setPreferredSize(new Dimension(360, 640));
+		// Tiếp nhận các sự kiện của phím
+		setFocusable(true); 
+		// Kiểm tra 3 hàm của keyList khi nhấn phím
+		extracted();
+
+		// Animation của Bird lúc chậm (vàng)
+		slowDown = new ImageIcon(getClass().getResource("/res/bird1_yellow.png")).getImage();
+		slowMid = new ImageIcon(getClass().getResource("/res/bird2_yellow.png")).getImage();
+		slowUp = new ImageIcon(getClass().getResource("/res/bird3_yellow.png")).getImage();
+
+		// Animation của Bird lúc nhanh (đỏ)
+		fastDown = new ImageIcon(getClass().getResource("/res/bird1_red.png")).getImage();
+		fastMid = new ImageIcon(getClass().getResource("/res/bird2_red.png")).getImage();
+		fastUp = new ImageIcon(getClass().getResource("/res/bird3_red.png")).getImage();
+
+		//Tải hình ảnh lên trên Frame
+		backgroundImg = new ImageIcon(getClass().getResource("/res/flappybirdbg.png")).getImage();
+		birdImg = new ImageIcon(getClass().getResource("/res/flappybird.png")).getImage();
+		topPipImg = new ImageIcon(getClass().getResource("/res/toppipe.png")).getImage();
+		bottomImg = new ImageIcon(getClass().getResource("/res/bottompipe.png")).getImage();
+		bird = new Bird(birdImg);
+
+		// Thời gian ống xuất hiện
+		pipes = new ArrayList<>(); // Tạo 1 mảng trống để chứa các ống
+		placePipesTimer = new Timer(1500, (ActionEvent e) -> {
+					placePipes();
+				}); // phải gọi sự kiện để ống được thực hiện - 1,5s sẽ gọi ống 1 lần
+
+		// Game timer
+		gameLoop = new Timer(20, (ActionEvent e) -> {
+					// Chim sẽ ko rơi khi chạm đáy
+					v_roi += p;
+					bird.y += v_roi;
+					
+					// Thresshold điểm (quyết định số điểm tối thiểu để chuyển sang màu đỏ)
+					if ((int)score < 20)
+					{
+						// Animation màu vàng
+						if (v_roi < -5)
+							bird.img = slowUp;
+						else if (v_roi < 5)
+							bird.img = slowMid;
+						else
+							bird.img = slowDown;
+					}
+					else
+					{
+						// Animation màu đỏ
+						if (v_roi < -5)
+							bird.img = fastUp;
+						else if (v_roi < 5)
+							bird.img = fastMid;
+						else
+							bird.img = fastDown;
+					}
+					
+					// Di chuyển các ống sang trái
+					for (int i = 0; i < pipes.size(); i++) {
+						Pipe pipe = pipes.get(i);
+						pipe.x -= pipeSpeed; // thời gian trôi của ống
+						
+						// Nếu chim đã bay qua ống và chưa được đánh dấu
+						if (!pipe.passed && pipe.x + pipe.width < bird.x) {
+							pipe.passed = true;
+							score += 0.5;
+							pipesPassed++;
+							
+							// Chỉ tăng tốc 1 lần mỗi khi đạt mốc mới
+							if (pipesPassed != 0 && pipesPassed % 8 == 0 &&  pipesPassed != lastSpeedUpdate) { //% 8 là 2 cặp ống (4 ống) vì mỗi ống là 0,5 nên
+								if (pipeSpeed < maxPipeSpeed) {
+									pipeSpeed++; // Tăng tốc độ ống
+									pipeInterval = Math.min(2000, pipeInterval + 150); // Giãn khoảng cách tối đa 2s
+									placePipesTimer.setDelay(pipeInterval); // Cập nhật thời gian gọi ống
+									System.out.println("Speed: " + pipeSpeed + " | Pipe distance: " + pipeInterval);
+								}
+								lastSpeedUpdate = pipesPassed;
+							}
+						}
+						
+						//Xử lí khi va chạm ống thì game dừng
+						if (bird.x < pipe.x + pipe.width && bird.x + bird.width > pipe.x && bird.y < pipe.y + pipe.height && bird.y + bird.height > pipe.y) {
+							gameOver = true;
+						}
+					}
+					
+					// Xoá ống đã đi qua khỏi màn hình
+					pipes.removeIf(pipe -> pipe.x + pipe.width < 0);
+
+					// Vẽ lại màn hình (gọi paintComponent)
+					repaint();
+					
+					
+					// Dừng game
+					if(bird.y > 640) {
+						gameOver = true;
+						System.out.println("Game over");
+					}
+					
+					if (gameOver) {
+						placePipesTimer.stop();
+						gameLoop.stop();
+						// Đổi nút Start thành Restart
+						startButton.setIcon(new ImageIcon(resizeImage(new ImageIcon(getClass().getResource("/res/restart.png")).getImage(), 120, 40)));
+						// Hiện lại nút Start
+						startButton.setVisible(true);
+						restarting = true;
+						isGameStarted = false;
+						// Cập nhật maxScore trong data.in
+						
+					}
+				});
+		// Nút Start
+		startButton = new JButton(new ImageIcon(resizeImage(new ImageIcon(getClass().getResource("/res/start.png")).getImage(), 120, 40)));
+		startButton.setBounds(120, 300, 120, 40); // Tuỳ chỉnh vị trí và kích thước
+		startButton.addActionListener((ActionEvent e) -> {
+					startGame();
+				});
+		// Bắt buộc để setBounds hoạt động
+		this.setLayout(null);
+		this.add(startButton);
+
+	}
+
+	private void extracted() {
+		addKeyListener(this);
+	}
+
+	@Override
+	public void paintComponent(Graphics g){
+		super.paintComponent(g);
+		draw(g);
+	}
+	/** 
+	 * 
+	 * Hàm vẽ đồ họa
+	 * 
+	 * @param Graphic
+	 * @return
+	 */
+	public void draw(Graphics g){
+
+		g.drawImage(backgroundImg, 0, 0, 360, 640, null);
+		g.drawImage(bird.img, bird.x, bird.y, bird.width, bird.height, null);
+		
+		//vẽ các ống 
+		for(int i = 0; i<pipes.size(); i++) {
+			Pipe pipe = pipes.get(i);
+			g.drawImage(pipe.img, pipe.x, pipe.y, pipe.width, pipe.height, null);
+		}
+		
+		// Vẽ score (điểm)
+		if (isGameStarted)
+		{
 			
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				placePipes();
-			}
-		});
-//        placePipesTimer.start();
-     
-        //game timer
-        gameLoop = new Timer(20, new ActionListener() {
-        	
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                v_roi += p;
-                bird.y += v_roi;
-                //Chim sẽ ko rơi khi chạm đáy
-//                if(bird.y>640-bird.height) {
-//                	bird.y = 640-bird.height;
-//                	v_roi = 0;
-//                }
-                
-                
-                //di chuyển ốngx 1 ống 
-//                pipeX -= 4; // làm ống trôi sang trái
-//                if(pipeX + pipeWidth < 0) {
-//                	pipeX = 360;
-//                	pipeY = random.nextInt(200)-200;
-//                }
-                
-                //di chuyển các ống sang trái
-                for (int i = 0; i < pipes.size(); i++) {
-                    Pipe pipe = pipes.get(i);
-                    pipe.x -= pipeSpeed; // thời gian trôi của ống
-                    
-                    
-                    // Nếu chim đã bay qua ống và chưa được đánh dấu
-                    if (!pipe.passed && pipe.x + pipe.width < bird.x) {
-                        pipe.passed = true;
-                        score += 0.5;
-                        pipesPassed++;
 
-                        // Chỉ tăng tốc 1 lần mỗi khi đạt mốc mới
-                        if (pipesPassed != 0 && pipesPassed % 8 == 0 &&  pipesPassed != lastSpeedUpdate) { //% 8 là 2 cặp ống(4 ống) vì mỗi ống là 0,5 nên 
-                            if (pipeSpeed < maxPipeSpeed) {
-                                pipeSpeed++; // tăng tốc độ ống
-                                pipeInterval = Math.min(2000, pipeInterval + 150); // giãn khoảng cách tối đa 2s
-                                placePipesTimer.setDelay(pipeInterval); // cập nhật thời gian gọi ống
-                                System.out.println("Tốc độ: " + pipeSpeed + " | Khoảng cách giãn: " + pipeInterval);
-                            }
-                            lastSpeedUpdate = pipesPassed;
-                        }
-                    }
- 
-                    
-                    //Xử lí khi va chạm ống thì game dừng
-                    if(collision(bird, pipe)) {
-                    	gameOver = true;
-                    }
-                }
+			// Đổ bóng
+			g.setColor(Color.DARK_GRAY);
+			g.drawString("Score:        " + (int)score, 6, 31);
+			g.drawString("Max Score: " + (int)maxScore, 6, 51);
 
-                // Xoá ống đã đi qua khỏi màn hình
-                pipes.removeIf(pipe -> pipe.x + pipe.width < 0);
+			// Hiển thị điểm
+			g.setColor(Color.WHITE);
+			g.drawString("Score:        " + (int)score, 5, 30);
+			g.drawString("Max Score: " + (int)maxScore, 5, 50);
+		}
 
-                repaint();// Vẽ lại màn hình (gọi paintComponent)
-               
+		if (!isGameStarted && !restarting) {
+			Image titleImg = new ImageIcon(getClass().getResource("/res/title.png")).getImage();
+			BufferedImage resized = resizeImage(titleImg, 260, 60);
+			g.drawImage(resized, 50, 100, null);
+		}
+		else if (!isGameStarted && restarting)
+		{
+			Image titleImg = new ImageIcon(getClass().getResource("/res/gameover.png")).getImage();
+			BufferedImage resized = resizeImage(titleImg, 260, 60);
+			g.drawImage(resized, 50, 100, null);  
+		}
+	}
 
-                //Dừng game
-                if(gameOver) {
-        			placePipesTimer.stop(); //dừng việc gọi ống thêm vào mảng
-        			gameLoop.stop();//Dừng việc vẽ		
-        		}
-                if(bird.y > 640) {
-                	gameOver = true;
-                	System.out.println("Game over");
-                }
-                
-                if (gameOver) {
-                    placePipesTimer.stop();
-                    gameLoop.stop();
-                    startButton.setVisible(true); // Hiện lại nút Start
-                    isGameStarted = false; 
-                }
+	
+	/** 
+	 * 
+	 * Hàm tạo ống
+	 * 
+	 */
+	public void placePipes() {
+		
+		//???
+		int randomPipeY = (int) (pipeY - pipeHeight / 4 - Math.random() * (pipeHeight/2));
+		int SpaceOfPipes = 640 / 4;
+		//Tạo ống trên
+		Pipe topPipe = new Pipe(topPipImg);
+		topPipe.y = randomPipeY;
+		//Thêm ống vào mảng pipes
+		pipes.add(topPipe);
+		
+		//Tạo ống dưới
+		Pipe botPipe = new Pipe(bottomImg);
+		botPipe.y = topPipe.y + SpaceOfPipes + pipeHeight;
+		pipes.add(botPipe);
+		
+	}
 
-            }
-        });
-//        gameLoop.start();
-     // Nút Start
-        startButton = new JButton("Start Game");
-        startButton.setBounds(120, 300, 120, 40); // Tuỳ chỉnh vị trí và kích thước
-        startButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                startGame();
-            }
-        });
-        this.setLayout(null); // Bắt buộc để setBounds hoạt động
-        this.add(startButton);
-     }
-    public void paintComponent(Graphics g){
-        super.paintComponent(g);
-        draw(g);
-    }
-    public void draw(Graphics g){
-        g.drawImage(backgroundImg, 0, 0, 360, 640, null);
-        g.drawImage(bird.img, bird.x, bird.y, bird.width, bird.height, null);
-        
-        //vẽ các ống 
-        for(int i = 0; i<pipes.size(); i++) {
-        	Pipe pipe = pipes.get(i);
-        	g.drawImage(pipe.img, pipe.x, pipe.y, pipe.width, pipe.height, null);
-        }
-        
-     // Hiển thị điểm số
-        g.setColor(Color.WHITE);
-        g.setFont(g.getFont().deriveFont(40f)); // font size 18
-        
-        // Vẽ score (điểm)
-        g.drawString("" + (int)score, 180, 80);
-        
-//        // Vẽ số ống đã vượt (pipesPassed)
-//        g.drawString("Pipes Passed: " + pipesPassed, 10, 60);
-//        
-//        // Vẽ tốc độ ống
-//        g.drawString("Pipe Speed: " + pipeSpeed, 10, 90);
-    }
-    
-    //Tạo ống
-    public void placePipes() {
-    	
-    	//???
-    	int randomPipeY = (int) (pipeY -pipeHeight/4 - Math.random()*(pipeHeight/2));
-    	int SpaceOfPipes = 640/4;
-    	//Tạo ống trên
-    	Pipe topPipe = new Pipe(topPipImg);
-    	topPipe.y = randomPipeY;
-    	//Thêm ống vào mảng pipes
-    	pipes.add(topPipe);
-    	
-    	//Tạo ống dưới
-    	Pipe botPipe = new Pipe(bottomImg);
-    	botPipe.y = topPipe.y + SpaceOfPipes +  pipeHeight;
-    	pipes.add(botPipe);
-    	
-    }
-    
-    
+	/** 
+	 * 
+	 * Hàm tùy chỉnh kích thước Image
+	 * 
+	 * @param Image ảnh muốn chỉnh sửa
+	 * @return
+	 * 
+	 */
+	public static BufferedImage resizeImage(Image originalImage, int width, int height) {
+		BufferedImage resized = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+		Graphics2D g2d = resized.createGraphics();
+		g2d.drawImage(originalImage, 0, 0, width, height, null);
+		g2d.dispose();
+		return resized;
+	}
+
+	/** 
+	 * 
+	 * Hàm tạo font
+	 * 
+	 * @param path đường dẫn của Font (e.g "/font/Minecraft.ttf")
+	 * @return
+	 * 
+	 */
+	
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		
@@ -312,8 +378,5 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	}
 	@Override
 	public void keyReleased(KeyEvent e) {
-	}   
+	}
 }
-
-
-
