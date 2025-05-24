@@ -1,4 +1,5 @@
 
+
 package FLB;
 
 import java.awt.Color;
@@ -13,6 +14,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
@@ -21,6 +23,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.Timer;
+
 
 public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	
@@ -31,9 +34,13 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	Image backgroundImg, birdImg, topPipImg, bottomImg;
 
 	boolean restarting = false;
+	boolean New = false;
 
-	int maxScore;
+	int best;
 
+	String username;
+
+//	ScoreDB scoreDB = new ScoreDB();
 	
 	// Birds
 	int birdX = 45; // Vị trí của con chim cánh mép trái cửa sổ 45px
@@ -114,8 +121,10 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		pipeSpeed = 4;
 		pipeInterval = 1500;
 		lastSpeedUpdate = 0;
+		New = false;
 
 		// Lấy maxScore
+//		best = scoreDB.getMaxScore(username);
 
 		// Reset Timer
 		placePipesTimer.setDelay(pipeInterval);
@@ -239,13 +248,18 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 						startButton.setVisible(true);
 						restarting = true;
 						isGameStarted = false;
-						// Cập nhật maxScore trong data.in
-						
+						// Cập nhật maxScore
+						if ((int) score > best)
+						{
+							New = true;
+							best = (int) score;
+//							scoreDB.updateMaxScore((int) score, username);
+						}
 					}
 				});
 		// Nút Start
 		startButton = new JButton(new ImageIcon(resizeImage(new ImageIcon(getClass().getResource("/res/start.png")).getImage(), 120, 40)));
-		startButton.setBounds(120, 300, 120, 40); // Tuỳ chỉnh vị trí và kích thước
+		startButton.setBounds(120, 500, 120, 40); // Tuỳ chỉnh vị trí và kích thước
 		startButton.addActionListener((ActionEvent e) -> {
 					startGame();
 				});
@@ -262,56 +276,101 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	@Override
 	public void paintComponent(Graphics g){
 		super.paintComponent(g);
-		draw(g);
-	}
-	/** 
-	 * 
-	 * Hàm vẽ đồ họa
-	 * 
-	 * @param Graphic
-	 * @return
-	 */
-	public void draw(Graphics g){
+		Graphics2D G2D = (Graphics2D) g;
 
-		g.drawImage(backgroundImg, 0, 0, 360, 640, null);
-		g.drawImage(bird.img, bird.x, bird.y, bird.width, bird.height, null);
+
+		G2D.drawImage(backgroundImg, 0, 0, 360, 640, null);
+
+		if(!isGameStarted && gameOver == false) {
+		BufferedImage logo = resizeImage(new ImageIcon(getClass().getResource("/res/logo.png")).getImage(), 153, 24);
+		G2D.drawImage(logo, 5, 5, null);
+		}
+		// Xoay chim theo vận tốc
+
+		/* Lấy góc của chim quay, v_roi * 3 để khiến cho góc quay dễ nhìn hơn */
+		/* Góc cao nhất:-45° (hướng lên trên 45 độ) */
+		/* Góc thấp nhất: +90° (hướng thẳng xuống dưới) */
+		double angle = Math.toRadians(Math.max(-45, Math.min(90, v_roi * 3)));
+
+		/* Lưu trạng thái đồ họa */
+		AffineTransform old = G2D.getTransform();
+
+		/* Di chuyển tâm của chim từ góc trái sang chính giữa con chim */
+		/* Do rotate() xoay ảnh quanh tâm --> tâm phải ở chính giữa */
+		G2D.translate(bird.x + bird.width / 2, bird.y + bird.height / 2);
+		G2D.rotate(angle);
+
+		/* Do thay đổi tâm, vị trí drawImage() cũng thay đổi, do đó phải vẽ lại chim theo tâm */
+		G2D.drawImage(bird.img, -bird.width / 2, -bird.height / 2, bird.width, bird.height, null);
+
+		/* Reset */
+		G2D.setTransform(old);
 		
 		//vẽ các ống 
-		for(int i = 0; i<pipes.size(); i++) {
-			Pipe pipe = pipes.get(i);
-			g.drawImage(pipe.img, pipe.x, pipe.y, pipe.width, pipe.height, null);
-		}
+		for(Pipe pipe: pipes)
+			G2D.drawImage(pipe.img, pipe.x, pipe.y, pipe.width, pipe.height, null);
 		
 		// Vẽ score (điểm)
 		if (isGameStarted)
 		{
-			
+			// Khởi tạo font chữ
+			G2D.setFont(loadCustomFont("/font/flappy-font.ttf", 40f));
 
 			// Đổ bóng
-			g.setColor(Color.DARK_GRAY);
-			g.drawString("Score:        " + (int)score, 6, 31);
-			g.drawString("Max Score: " + (int)maxScore, 6, 51);
+			G2D.setColor(Color.DARK_GRAY);
+			G2D.drawString("" + (int) score, 182, 102);
 
 			// Hiển thị điểm
-			g.setColor(Color.WHITE);
-			g.drawString("Score:        " + (int)score, 5, 30);
-			g.drawString("Max Score: " + (int)maxScore, 5, 50);
+			G2D.setColor(Color.WHITE);
+			G2D.drawString("" + (int)score, 180, 100);
 		}
 
 		if (!isGameStarted && !restarting) {
-			Image titleImg = new ImageIcon(getClass().getResource("/res/title.png")).getImage();
+			Image titleImg = new ImageIcon(getClass().getResource("/res/getready.png")).getImage();
 			BufferedImage resized = resizeImage(titleImg, 260, 60);
-			g.drawImage(resized, 50, 100, null);
+			G2D.drawImage(resized, 50, 100, null);
 		}
 		else if (!isGameStarted && restarting)
 		{
-			Image titleImg = new ImageIcon(getClass().getResource("/res/gameover.png")).getImage();
-			BufferedImage resized = resizeImage(titleImg, 260, 60);
-			g.drawImage(resized, 50, 100, null);  
+			BufferedImage banner = resizeImage(new ImageIcon(getClass().getResource("/res/banner.png")).getImage(), 300, 150);
+			BufferedImage title = resizeImage(new ImageIcon(getClass().getResource("/res/gameover.png")).getImage(), 260, 60);
+			G2D.drawImage(banner, 30, 275, null);
+			G2D.drawImage(title, 50, 100, null);
+			G2D.setFont(loadCustomFont("/font/flappy-font.ttf", 18f));
+
+			// Đổ bóng
+			G2D.setColor(Color.DARK_GRAY);
+			G2D.drawString("MEDAL", 69, 321);
+			G2D.drawString("SCORE: " + (int) score, 201, 321);
+			G2D.drawString("BEST:  " + (int) best, 201, 391);
+
+			// Hiển thị banner điểm
+			G2D.setColor(new Color(249, 121, 93));
+			G2D.drawString("MEDAL", 68, 320);
+			G2D.drawString("SCORE: " + (int) score, 200, 320);
+			G2D.drawString("BEST:  " + (int) best, 200, 390);
+
+			// Nếu là kỉ lục
+			if (New)
+			{
+				Image newRecord = resizeImage(new ImageIcon(getClass().getResource("/res/newScore.png")).getImage(), 32, 16);
+				G2D.drawImage(newRecord, 160, 375, null);
+			}
+
+			// Hiển thị Medal
+			Image medal;
+			if ((int) score < 10)
+				medal = resizeImage(new ImageIcon(getClass().getResource("/res/Iron.png")).getImage(), 60, 60);
+			else if ((int) score < 30)
+				medal = resizeImage(new ImageIcon(getClass().getResource("/res/Copper.png")).getImage(), 60, 60);
+			else if ((int) score < 60)
+				medal = resizeImage(new ImageIcon(getClass().getResource("/res/Silver.png")).getImage(), 60, 60);
+			else
+				medal = resizeImage(new ImageIcon(getClass().getResource("/res/Gold.png")).getImage(), 60, 60);
+			G2D.drawImage(medal, 64, 331, null);
 		}
 	}
 
-	
 	/** 
 	 * 
 	 * Hàm tạo ống
@@ -359,7 +418,19 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	 * @return
 	 * 
 	 */
-	
+	public Font loadCustomFont(String path, float size) 
+	{
+		try {
+			InputStream is = getClass().getResourceAsStream(path); // e.g. "/FLB/myfont.ttf"
+			Font font = Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(size);
+			GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+			ge.registerFont(font);
+			return font;
+		} catch (FontFormatException | IOException e) {
+			e.printStackTrace(System.err);
+			return new Font("Arial", Font.PLAIN, (int)size); // fallback
+	}
+}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
