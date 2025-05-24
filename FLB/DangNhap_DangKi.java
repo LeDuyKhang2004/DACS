@@ -30,7 +30,7 @@ public class DangNhap_DangKi {
         
 
         try {
-            InputStream is = DangNhap_DangKi.class.getResourceAsStream("/font/flappy-fobt.ttf");
+            InputStream is = DangNhap_DangKi.class.getResourceAsStream("/t/PressStart2P-Regular.ttf");
             if (is != null) { // Kiểm tra nếu InputStream không null
                 customFont = Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(25f);
             } else {

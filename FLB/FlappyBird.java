@@ -314,7 +314,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		if (isGameStarted)
 		{
 			// Khởi tạo font chữ
-			G2D.setFont(loadCustomFont("/font/flappy-font.ttf", 40f));
+			G2D.setFont(loadCustomFont("/t/flappy-font.ttf", 40f));
 
 			// Đổ bóng
 			G2D.setColor(Color.DARK_GRAY);
@@ -336,7 +336,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 			BufferedImage title = resizeImage(new ImageIcon(getClass().getResource("/res/gameover.png")).getImage(), 260, 60);
 			G2D.drawImage(banner, 30, 275, null);
 			G2D.drawImage(title, 50, 100, null);
-			G2D.setFont(loadCustomFont("/font/flappy-font.ttf", 18f));
+			G2D.setFont(loadCustomFont("/t/flappy-font.ttf", 18f));
 
 			// Đổ bóng
 			G2D.setColor(Color.DARK_GRAY);
