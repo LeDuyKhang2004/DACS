@@ -1,7 +1,12 @@
 package FLB;
 
 import java.io.InputStream;
+import java.util.Collections;
+
 import javax.swing.*;
+
+import Connect.ConnectDatabase;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -9,12 +14,22 @@ import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.ItemEvent; // Import ItemEvent
 import java.awt.event.ItemListener; // Import ItemListener 
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.awt.font.TextAttribute;
 import java.awt.image.BufferedImage;
 
-public class DangNhap_DangKi {
+public class Dangki {
+	private static Font customFont;
 
+	 // Khai báo một đối tượng ConnectDatabase
+    private static ConnectDatabase authManager;
+    
     public static void main(String[] args) {
-        JFrame frame = new JFrame("Sign Up");
+    	
+        authManager = new ConnectDatabase();
+        
+        JFrame frame = new JFrame("Register Flappy Bird");
         frame.setSize(360, 640);
         frame.setLocationRelativeTo(null);
         frame.setResizable(false);
@@ -24,13 +39,13 @@ public class DangNhap_DangKi {
         Color customBG = new Color(77, 199, 208); // Nền ngoài
         frame.getContentPane().setBackground(customBG);
 
-        // Tạo biến font sớm để dùng cho tất cả thành phần
-        Font customFont;
+  
+       
                 
         
 
         try {
-            InputStream is = DangNhap_DangKi.class.getResourceAsStream("/t/PressStart2P-Regular.ttf");
+            InputStream is = DangNhap.class.getResourceAsStream("/t/PressStart2P-Regular.ttf");
             if (is != null) { // Kiểm tra nếu InputStream không null
                 customFont = Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(25f);
             } else {
@@ -44,7 +59,7 @@ public class DangNhap_DangKi {
         }
         
         //Title FlappyBird
-        ImageIcon title = new ImageIcon(DangNhap_DangKi.class.getResource("/res/flappy-bird-logo.png"));
+        ImageIcon title = new ImageIcon(DangNhap.class.getResource("/res/flappy-bird-logo.png"));
         BufferedImage resized = resizeImage(title.getImage(), 262, 70); // vì title đang kiểu Icon nên phải .getImage() để nhận đối tượng là Image
         JLabel imageLabel = new JLabel(new ImageIcon(resized)); 
         
@@ -52,10 +67,10 @@ public class DangNhap_DangKi {
         frame.add(imageLabel);
 
         //title nhỏ
-        ImageIcon titleSmall = new ImageIcon(DangNhap_DangKi.class.getResource("/res/sprite.png"));
+        ImageIcon titleSmall = new ImageIcon(DangNhap.class.getResource("/res/sprite.png"));
         BufferedImage resizedTtSmall = resizeImage(titleSmall.getImage(), 170, 20);
         JLabel imageLabel2 = new JLabel(new ImageIcon(resizedTtSmall));
-        imageLabel2.setBounds(160, 120, 170, 20);
+        imageLabel2.setBounds(95, 130, 244, 20);
         frame.add(imageLabel2);
         
 
@@ -72,8 +87,8 @@ public class DangNhap_DangKi {
 
 
      // Tiêu đề "Sign Up"
-        JLabel label = new JLabel("Sign Up");
-        label.setBounds(45, 30, 200, 50);
+        JLabel label = new JLabel("REGISTER");
+        label.setBounds(32, 30, 200, 50);
         label.setForeground(Color.WHITE);
         label.setBackground(BG);
         label.setOpaque(true);
@@ -105,12 +120,25 @@ public class DangNhap_DangKi {
         showPasswordCheckBox.setOpaque(false); // Đảm bảo nền trong suốt nếu muốn
         
         //Nút Sign up
-        JButton BTsignUp = new JButton("Sign Up Now");
+        JButton BTsignUp = new JButton("Register Now");
         BTsignUp.setBounds(32, 270, 200, 40);
         BTsignUp.setFont(customFont.deriveFont(Font.PLAIN, 10f));
         BTsignUp.setForeground(Color.WHITE);
         BTsignUp.setBackground(new Color(230, 120, 50));
         BTsignUp.setBorder(BorderFactory.createLineBorder(Color.BLACK, 3));
+        
+        //Login
+        JLabel goToLoginLabel = new JLabel("Login?");
+        goToLoginLabel.setBounds(95, 320, 80, 20); // Điều chỉnh vị trí phù hợp
+        goToLoginLabel.setForeground(new Color(240, 240, 240)); // Màu chữ nhạt hơn một chút
+        goToLoginLabel.setFont(customFont.deriveFont(Font.PLAIN, 10f)); // Cùng font với các nút khác
+
+        // Đặt gạch chân cho chữ "Login?"
+        Font originalFont = goToLoginLabel.getFont();
+        goToLoginLabel.setFont(originalFont.deriveFont(
+            Collections.singletonMap(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON)));
+
+         
 
         // === FocusListener cho tfName ===
         tfName.addFocusListener(new FocusAdapter() {
@@ -173,25 +201,45 @@ public class DangNhap_DangKi {
 			
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				 String enteredPassword = new String(tfPassword.getPassword());
-				if(tfName.getText().equals("Khang") && enteredPassword.equals("1")) {
-					JOptionPane.showMessageDialog(frame, "Đăng nhập thành công!", "Thông báo", JOptionPane.INFORMATION_MESSAGE);
-					frame.dispose(); //đóng cửa sổ hiện tại
-					FlappyBird flb = new FlappyBird();
-					App.main(args); //Tạo và hiển thị cửa sổ JFrame
-				}
-				else {
-					JOptionPane.showMessageDialog(frame, "Vui lòng nhập lại tên người dùng hoặc mật khẩu!", "Lỗi đăng nhập", JOptionPane.ERROR_MESSAGE);
-				}
+				String newUser = tfName.getText();
+				String Newpassword = new String(tfPassword.getPassword());
 				
+
+                // Kiểm tra xem trường newUser có phải là placeholder không
+                if (newUser.equals("newUser") || newUser.isEmpty()) {
+                    JOptionPane.showMessageDialog(frame, "Vui lòng nhập tên người dùng!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                // Kiểm tra xem trường Password có phải là placeholder không
+                if (Newpassword.equals("Password") || Newpassword.isEmpty()) {
+                    JOptionPane.showMessageDialog(frame, "Vui lòng nhập mật khẩu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+                
+                if(ConnectDatabase.registerUser(newUser, Newpassword)) {
+                	 JOptionPane.showMessageDialog(frame, "Đăng kí thành công! Chào mừng " + newUser, "Thông báo", JOptionPane.INFORMATION_MESSAGE);
+                	 frame.dispose();
+                	 DangNhap.main(args);
+                }else
+                	JOptionPane.showMessageDialog(frame, "Đăng kí thất bại! Tên người dùng đã tồn tại");
 			}
 		});
+        
+        goToLoginLabel.addMouseListener(new MouseAdapter() {
+		
+        	@Override
+        	public void mouseClicked(MouseEvent e) {
+        		frame.dispose();
+        		DangNhap.main(args);
+        	}
+        });
         
         pn.add(tfName);
         pn.add(tfPassword);
         pn.add(showPasswordCheckBox); // Thêm checkbox vào panel
         pn.add(BTsignUp);
         pn.add(label);
+        pn.add(goToLoginLabel);
 
         frame.add(pn);
         frame.setVisible(true);

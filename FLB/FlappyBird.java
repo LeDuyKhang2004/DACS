@@ -171,10 +171,9 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 
 		// Game timer
 		gameLoop = new Timer(20, (ActionEvent e) -> {
-					// Chim sẽ ko rơi khi chạm đáy
-					v_roi += p;
-					bird.y += v_roi;
 					
+					v_roi += p; // tăng vận tốc rơi
+					bird.y += v_roi; //vị trí của chim sẽ rơi th
 					// Thresshold điểm (quyết định số điểm tối thiểu để chuyển sang màu đỏ)
 					if ((int)score < 20)
 					{
@@ -234,10 +233,13 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 					
 					
 					// Dừng game
-					if(bird.y > 640) {
+					if(bird.y > 640 || bird.y < 0 ) {
 						gameOver = true;
 						System.out.println("Game over");
 					}
+//					else if(bird.y < 0) {
+//						gameOver = true;
+//					}
 					
 					if (gameOver) {
 						placePipesTimer.stop();
