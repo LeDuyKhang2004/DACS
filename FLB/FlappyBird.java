@@ -245,7 +245,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 						placePipesTimer.stop();
 						gameLoop.stop();
 						// Đổi nút Start thành Restart
-						startButton.setIcon(new ImageIcon(resizeImage(new ImageIcon(getClass().getResource("/res/restart.png")).getImage(), 120, 40)));
+						startButton.setIcon(new ImageIcon(Helper.resizeImage(new ImageIcon(getClass().getResource("/res/restart.png")).getImage(), 120, 40)));
 						// Hiện lại nút Start
 						startButton.setVisible(true);
 						restarting = true;
@@ -260,7 +260,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 					}
 				});
 		// Nút Start
-		startButton = new JButton(new ImageIcon(resizeImage(new ImageIcon(getClass().getResource("/res/start.png")).getImage(), 120, 40)));
+		startButton = new JButton(new ImageIcon(Helper.resizeImage(new ImageIcon(getClass().getResource("/res/start.png")).getImage(), 120, 40)));
 		startButton.setBounds(120, 500, 120, 40); // Tuỳ chỉnh vị trí và kích thước
 		startButton.addActionListener((ActionEvent e) -> {
 					startGame();
@@ -284,7 +284,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		G2D.drawImage(backgroundImg, 0, 0, 360, 640, null);
 
 		if(!isGameStarted && gameOver == false) {
-		BufferedImage logo = resizeImage(new ImageIcon(getClass().getResource("/res/logo.png")).getImage(), 153, 24);
+		BufferedImage logo = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/logo.png")).getImage(), 153, 24);
 		G2D.drawImage(logo, 5, 5, null);
 		}
 		// Xoay chim theo vận tốc
@@ -316,7 +316,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		if (isGameStarted)
 		{
 			// Khởi tạo font chữ
-			G2D.setFont(loadCustomFont("/t/flappy-font.ttf", 40f));
+			G2D.setFont(Helper.loadCustomFont("/t/flappy-font.ttf", 40f));
 
 			// Đổ bóng
 			G2D.setColor(Color.DARK_GRAY);
@@ -327,23 +327,22 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 			G2D.drawString("" + (int)score, 180, 100);
 			
 			//Thêm chữ User: "Name" trên góc trái
-			G2D.setFont(loadCustomFont("/t/flappy-font.ttf", 14f));
-			G2D.drawString("User: " + username + "k", 10, 20);
+			G2D.setFont(Helper.loadCustomFont("/t/flappy-font.ttf", 14f));
+			G2D.drawString("USER: " + username , 10, 20);
 		}
 
 		if (!isGameStarted && !restarting) {
-			Image titleImg = new ImageIcon(getClass().getResource("/res/getready.png")).getImage();
-			BufferedImage resized = resizeImage(titleImg, 260, 60);
-			G2D.drawImage(resized, 50, 100, null);
+			BufferedImage getReady = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/getready.png")).getImage(), 260, 60);
+			G2D.drawImage(getReady, 50, 100, null);
 		}
 	
 		else if (!isGameStarted && restarting)
 		{
-			BufferedImage banner = resizeImage(new ImageIcon(getClass().getResource("/res/banner.png")).getImage(), 300, 150);
-			BufferedImage title = resizeImage(new ImageIcon(getClass().getResource("/res/gameover.png")).getImage(), 260, 60);
+			BufferedImage banner = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/banner.png")).getImage(), 300, 150);
+			BufferedImage title = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/gameover.png")).getImage(), 260, 60);
 			G2D.drawImage(banner, 30, 275, null);
 			G2D.drawImage(title, 50, 100, null);
-			G2D.setFont(loadCustomFont("/t/flappy-font.ttf", 18f));
+			G2D.setFont(Helper.loadCustomFont("/t/flappy-font.ttf", 18f));
 
 			// Đổ bóng
 			G2D.setColor(Color.DARK_GRAY);
@@ -358,25 +357,27 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 			G2D.drawString("BEST:  " + (int) best, 200, 390);
 
 			//Thêm chữ user: "Name" trên góc trái
-			G2D.setFont(loadCustomFont("/t/flappy-font.ttf", 14f));
+			G2D.setColor(Color.WHITE);
+			G2D.setFont(Helper.loadCustomFont("/t/flappy-font.ttf", 14f));
 			G2D.drawString("USER: " + username , 10, 20);
+			
 			// Nếu là kỉ lục
 			if (New)
 			{
-				Image newRecord = resizeImage(new ImageIcon(getClass().getResource("/res/newScore.png")).getImage(), 32, 16);
+				Image newRecord = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/newScore.png")).getImage(), 32, 16);
 				G2D.drawImage(newRecord, 160, 375, null);
 			}
 
 			// Hiển thị Medal
 			Image medal;
 			if ((int) score < 10)
-				medal = resizeImage(new ImageIcon(getClass().getResource("/res/Iron.png")).getImage(), 60, 60);
+				medal = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/Iron.png")).getImage(), 60, 60);
 			else if ((int) score < 30)
-				medal = resizeImage(new ImageIcon(getClass().getResource("/res/Copper.png")).getImage(), 60, 60);
+				medal = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/Copper.png")).getImage(), 60, 60);
 			else if ((int) score < 60)
-				medal = resizeImage(new ImageIcon(getClass().getResource("/res/Silver.png")).getImage(), 60, 60);
+				medal = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/Silver.png")).getImage(), 60, 60);
 			else
-				medal = resizeImage(new ImageIcon(getClass().getResource("/res/Gold.png")).getImage(), 60, 60);
+				medal = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/Gold.png")).getImage(), 60, 60);
 			G2D.drawImage(medal, 64, 331, null);
 		}
 	}
@@ -403,44 +404,6 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		pipes.add(botPipe);
 		
 	}
-
-	/** 
-	 * 
-	 * Hàm tùy chỉnh kích thước Image
-	 * 
-	 * @param Image ảnh muốn chỉnh sửa
-	 * @return
-	 * 
-	 */
-	public static BufferedImage resizeImage(Image originalImage, int width, int height) {
-		BufferedImage resized = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
-		Graphics2D g2d = resized.createGraphics();
-		g2d.drawImage(originalImage, 0, 0, width, height, null);
-		g2d.dispose();
-		return resized;
-	}
-
-	/** 
-	 * 
-	 * Hàm tạo font
-	 * 
-	 * @param path đường dẫn của Font (e.g "/font/Minecraft.ttf")
-	 * @return
-	 * 
-	 */
-	public Font loadCustomFont(String path, float size) 
-	{
-		try {
-			InputStream is = getClass().getResourceAsStream(path); // e.g. "/FLB/myfont.ttf"
-			Font font = Font.createFont(Font.TRUETYPE_FONT, is).deriveFont(size);
-			GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-			ge.registerFont(font);
-			return font;
-		} catch (FontFormatException | IOException e) {
-			e.printStackTrace(System.err);
-			return new Font("Arial", Font.PLAIN, (int)size); // fallback
-	}
-}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
