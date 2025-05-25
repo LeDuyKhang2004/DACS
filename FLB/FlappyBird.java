@@ -326,7 +326,13 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 			G2D.setColor(Color.WHITE);
 			G2D.drawString("" + (int)score, 180, 100);
 			
-			//Thêm chữ User: "Name" trên góc trái
+			//Thêm chữ user: "Name" trên góc trái. ĐỔ BÓNG
+			G2D.setColor(Color.DARK_GRAY);
+			G2D.setFont(Helper.loadCustomFont("/t/flappy-font.ttf", 14f));
+			G2D.drawString("USER: " + username , 12, 22);
+			
+			//Thêm chữ usee: "Name: trên góc trái
+			G2D.setColor(Color.WHITE);
 			G2D.setFont(Helper.loadCustomFont("/t/flappy-font.ttf", 14f));
 			G2D.drawString("USER: " + username , 10, 20);
 		}
@@ -356,7 +362,12 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 			G2D.drawString("SCORE: " + (int) score, 200, 320);
 			G2D.drawString("BEST:  " + (int) best, 200, 390);
 
-			//Thêm chữ user: "Name" trên góc trái
+			//Thêm chữ user: "Name" trên góc trái. ĐỔ BÓNG
+			G2D.setColor(Color.DARK_GRAY);
+			G2D.setFont(Helper.loadCustomFont("/t/flappy-font.ttf", 14f));
+			G2D.drawString("USER: " + username , 12, 22);
+			
+			//Thêm chữ usee: "Name: trên góc trái
 			G2D.setColor(Color.WHITE);
 			G2D.setFont(Helper.loadCustomFont("/t/flappy-font.ttf", 14f));
 			G2D.drawString("USER: " + username , 10, 20);
