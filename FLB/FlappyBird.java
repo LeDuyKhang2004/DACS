@@ -325,6 +325,10 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 			// Hiển thị điểm
 			G2D.setColor(Color.WHITE);
 			G2D.drawString("" + (int)score, 180, 100);
+			
+			//Thêm chữ User: "Name" trên góc trái
+			G2D.setFont(loadCustomFont("/t/flappy-font.ttf", 14f));
+			G2D.drawString("User: " + username + "k", 10, 20);
 		}
 
 		if (!isGameStarted && !restarting) {
@@ -332,6 +336,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 			BufferedImage resized = resizeImage(titleImg, 260, 60);
 			G2D.drawImage(resized, 50, 100, null);
 		}
+	
 		else if (!isGameStarted && restarting)
 		{
 			BufferedImage banner = resizeImage(new ImageIcon(getClass().getResource("/res/banner.png")).getImage(), 300, 150);
@@ -352,6 +357,9 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 			G2D.drawString("SCORE: " + (int) score, 200, 320);
 			G2D.drawString("BEST:  " + (int) best, 200, 390);
 
+			//Thêm chữ user: "Name" trên góc trái
+			G2D.setFont(loadCustomFont("/t/flappy-font.ttf", 14f));
+			G2D.drawString("USER: " + username , 10, 20);
 			// Nếu là kỉ lục
 			if (New)
 			{
