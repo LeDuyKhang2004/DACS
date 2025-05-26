@@ -18,8 +18,8 @@ public class ConnectDatabase {
     // Bạn có thể giữ lại phương thức main này để kiểm tra độc lập,
     // nhưng nó sẽ không được gọi khi chạy từ DangNhap_DangKi.
     public static void main(String[] args) {
-        String testUser = "A"; // Thay bằng user có trong DB
-        String testPass = "123"; // Thay bằng pass tương ứng
+        String testUser = "Khoa"; // Thay bằng user có trong DB
+        String testPass = "1="; // Thay bằng pass tương ứng
         System.out.println("Kết nối thành công");
         System.out.println(testUser + " ");
         
@@ -144,15 +144,78 @@ public class ConnectDatabase {
         String sqlCheck = "SELECT Name FROM Users WHERE Name = ?";
         try (PreparedStatement pstmt = conn.prepareStatement(sqlCheck)) {
             pstmt.setString(1, username);
-            ResultSet rs = pstmt.executeQuery();
+            ResultSet rs = pstmt.executeQuery(); //executeQuery dùng để truy vấn
             return rs.next(); // true nếu tìm thấy người dùng
         }
     }
     
-    public static boolean saveScore(String username, int score) {
-    	String sql = "INSERT INTO Scores (Name, Scores) VALUES (?, ?); ";
+    public static boolean saveScore(String username, int score) throws SQLException {
+    	String sqlSaveScore = "INSERT INTO Scores (Name, Score) VALUES (?, ?); ";
+    	Connection conn = null;
+    	 try {
+             conn = DriverManager.getConnection(DB_URL, USER, PASSWORD);
+             if (conn == null) {
+                 System.err.println("Không thể kết nối CSDL trong registerUser.");
+                 return false;
+             }
     	
-		return false;
+    	try(PreparedStatement pstmt = conn.prepareStatement(sqlSaveScore)){
+    		pstmt.setString(1, username);
+    		pstmt.setInt(2, score);
+    		int rowAffected = pstmt.executeUpdate();
+    		return rowAffected > 0; //kiểm tra có dòng nào được thay đổi không
+    	}
+    	}
+    	 
+     catch (SQLException e) {
+        // Lỗi phổ biến nhất ở đây là do khóa ngoại (username không tồn tại trong Users)
+        System.err.println("Lỗi CSDL khi lưu điểm số cho '" + username + "': " + e.getMessage());
+        // e.printStackTrace(); // Bỏ comment để xem chi tiết lỗi nếu cần gỡ lỗi
+        return false;
+    } finally {
+        if (conn != null) {
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                System.err.println("Lỗi khi đóng kết nối CSDL trong saveScore: " + e.getMessage());
+            }
+        }
+		
+    }
+    }
+    public static int getHighScore(String username) {
+		String sqlHighScore = "SELECT MAX(Score) AS MaxScore FROM Scores WHERE Name = ?";
+		Connection conn = null;
+		try {
+			conn = DriverManager.getConnection(DB_URL, USER, PASSWORD);
+			if(conn == null) {
+				 System.err.println("Không thể kết nối CSDL trong registerUser.");
+                 return -1;
+			}
+			try(PreparedStatement pstmt = conn.prepareStatement(sqlHighScore)) {
+				pstmt.setString(1, username);
+				
+				ResultSet rs = pstmt.executeQuery();
+				if( rs.next()) {
+					return rs.getInt("MaxScore");
+				}
+			}
+		}  catch (SQLException e) {
+	        // Lỗi phổ biến nhất ở đây là do khóa ngoại (username không tồn tại trong Users)
+	        System.err.println("Lỗi CSDL khi lấy điểm số lớn nhất cho '" + username + "': " + e.getMessage());
+	        // e.printStackTrace(); // Bỏ comment để xem chi tiết lỗi nếu cần gỡ lỗi
+	        return -1;
+	    } finally {
+	        if (conn != null) {
+	            try {
+	                conn.close();
+	            } catch (SQLException e) {
+	                System.err.println("Lỗi khi đóng kết nối CSDL trong getHighScore: " + e.getMessage());
+	            }
+	        }		
+	    }
+		return 0;
+	}
     }
     
-}
+

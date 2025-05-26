@@ -11,6 +11,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -22,6 +23,9 @@ import Connect.ConnectDatabase;
 
 public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	
+	//gọi biến để lưu tên user
+	private String playerUsername;	
+	
 	JButton startButton;
 	JButton rateButton;
 	
@@ -32,11 +36,9 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	boolean restarting = false;
 	boolean New = false;
 
-	int best;
-
-	//gọi biến để lưu tên user
-	private String playerUsername;	
 	
+	int bestScore;
+
 	// Birds
 	int birdX = 45; // Vị trí của con chim cánh mép trái cửa sổ 45px
 	int birdY = 320; // Vị trí của con chim cánh mép trên cửa sổ 320px
@@ -241,6 +243,13 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 					if (gameOver) {
 						placePipesTimer.stop();
 						gameLoop.stop();
+						
+						try {
+							
+							saveCurrentScore();
+							getHighCurrentScore();
+						
+						
 						// Đổi nút Start thành Restart
 						startButton.setIcon(new ImageIcon(Helper.resizeImage(new ImageIcon(getClass().getResource("/res/restart.png")).getImage(), 120, 40)));
 						// Hiện lại nút Start
@@ -250,12 +259,16 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 						restarting = true;
 						isGameStarted = false;
 						// Cập nhật maxScore
-						if ((int) score > best)
+						if ((int) score > bestScore)
 						{
 							New = true;
-							best = (int) score;
+							bestScore = (int) score;
 						}
-					}
+					
+						} catch (SQLException e1) {
+							// TODO Auto-generated catch block
+							e1.printStackTrace();
+						}}
 				});
 
 		// Nút Start
@@ -361,13 +374,13 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 			G2D.setColor(Color.DARK_GRAY);
 			G2D.drawString("MEDAL", 69, 321);
 			G2D.drawString("SCORE: " + (int) score, 201, 321);
-			G2D.drawString("BEST:  " + (int) best, 201, 391);
+			G2D.drawString("BEST:  " +  (int) bestScore, 201, 391);
 
 			// Hiển thị banner điểm
 			G2D.setColor(new Color(249, 121, 93));
 			G2D.drawString("MEDAL", 68, 320);
 			G2D.drawString("SCORE: " + (int) score, 200, 320);
-			G2D.drawString("BEST:  " + (int) best, 200, 390);
+			G2D.drawString("BEST:  " + (int) bestScore, 200, 390);
 
 			//Thêm chữ user: "Name" trên góc trái. ĐỔ BÓNG
 			G2D.setColor(Color.DARK_GRAY);
@@ -423,6 +436,24 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		
 	}
 	
+	public void saveCurrentScore() throws SQLException {
+		if (playerUsername != null && !playerUsername.equalsIgnoreCase("Guest") && score > 0) { // Chỉ lưu nếu có người dùng hợp lệ và điểm > 0
+            if (ConnectDatabase.saveScore(playerUsername, (int) score)) {
+                System.out.println("Đã lưu điểm " + (int) score + " cho người chơi: " + playerUsername);
+            } else {
+                System.err.println("Lỗi khi lưu điểm cho " + playerUsername + ". Có thể người dùng không tồn tại trong DB hoặc lỗi kết nối.");
+            }
+        } else {
+            System.out.println("Không lưu điểm vì không có người dùng đăng nhập hợp lệ hoặc điểm = 0.");
+        }
+	}
+	
+	public void getHighCurrentScore() {
+		bestScore = ConnectDatabase.getHighScore(playerUsername);
+		System.out.println("Điểm cao nhất: " + bestScore + " || User: " + playerUsername);
+		
+	}
+	
 	@Override
 	public void actionPerformed(ActionEvent e) {
 		
@@ -430,10 +461,11 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	
 	@Override
 	public void keyPressed(KeyEvent e) {
-		if (!isGameStarted) return; 
-		if(e.getKeyCode() == KeyEvent.VK_SPACE) {
+		if (!isGameStarted && gameOver && e.getKeyCode() == KeyEvent.VK_R)//ngăn nút space khi game chưa bắt đầu
+			startGame();		
+		else if(isGameStarted && e.getKeyCode() == KeyEvent.VK_SPACE ) 
 			v_roi = -9;
-		}
+		
 	}
 	@Override
 	public void keyTyped(KeyEvent e) {
