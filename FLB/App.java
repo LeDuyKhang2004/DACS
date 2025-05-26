@@ -15,7 +15,7 @@ public class App {
 	    frame.add(flb);
 	    frame.pack();
 	    frame.setVisible(true);
-	    
+
 	    flb.requestFocus();
 	    }
 	}

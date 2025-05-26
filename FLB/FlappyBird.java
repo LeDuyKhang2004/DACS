@@ -1,14 +1,9 @@
-
-
 package FLB;
 
 import java.awt.Color;
 import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontFormatException;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
-import java.awt.GraphicsEnvironment;
 import java.awt.Image;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -16,18 +11,19 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
+import Connect.ConnectDatabase;
+
 
 public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	
 	JButton startButton;
+	JButton rateButton;
 	
 	Image fastUp, fastMid, fastDown;
 	Image slowUp, slowMid, slowDown;
@@ -38,9 +34,8 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 
 	int best;
 
-	String username;
-
-//	ScoreDB scoreDB = new ScoreDB();
+	//gọi biến để lưu tên user
+	private String playerUsername;	
 	
 	// Birds
 	int birdX = 45; // Vị trí của con chim cánh mép trái cửa sổ 45px
@@ -55,7 +50,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		int height = birdHeight;
 		Image img;
 		
-		Bird(Image img){
+		Bird (Image img) {
 			this.img=img;  
 		}
 	}
@@ -85,7 +80,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		Image img;
 		Boolean passed = false;// đánh dấu chim đã qua 1 ống 
 		
-		Pipe(Image img){
+		Pipe (Image img) {
 			this.img = img;
 		}
 	}
@@ -110,6 +105,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	
 	
 	public void startGame() {
+		
 		if(isGameStarted = true);
 		// Reset trạng thái game
 		bird.y = birdY;
@@ -123,9 +119,6 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		lastSpeedUpdate = 0;
 		New = false;
 
-		// Lấy maxScore
-//		best = scoreDB.getMaxScore(username);
-
 		// Reset Timer
 		placePipesTimer.setDelay(pipeInterval);
 		placePipesTimer.start();
@@ -133,13 +126,20 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 
 		// Ẩn nút Start sau khi nhấn
 		startButton.setVisible(false);
+		rateButton.setVisible(false);
 
 		// Gọi repaint để cập nhật lại màn hình
 		repaint();
 	}
 
-	 FlappyBird() {
+	public void showRate() {
 
+	}
+
+	FlappyBird() {
+
+		//gọi lại lớp connect để lấy tên user
+		this.playerUsername = ConnectDatabase.currentUsername;
 		setPreferredSize(new Dimension(360, 640));
 		// Tiếp nhận các sự kiện của phím
 		setFocusable(true); 
@@ -233,13 +233,10 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 					
 					
 					// Dừng game
-					if(bird.y > 640 || bird.y < 0 ) {
+					if (bird.y > 640 || bird.y < 0 ) {
 						gameOver = true;
 						System.out.println("Game over");
 					}
-//					else if(bird.y < 0) {
-//						gameOver = true;
-//					}
 					
 					if (gameOver) {
 						placePipesTimer.stop();
@@ -248,6 +245,8 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 						startButton.setIcon(new ImageIcon(Helper.resizeImage(new ImageIcon(getClass().getResource("/res/restart.png")).getImage(), 120, 40)));
 						// Hiện lại nút Start
 						startButton.setVisible(true);
+						startButton.setBounds(120, 500, 120, 40);
+						rateButton.setVisible(false);
 						restarting = true;
 						isGameStarted = false;
 						// Cập nhật maxScore
@@ -255,20 +254,28 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 						{
 							New = true;
 							best = (int) score;
-//							scoreDB.updateMaxScore((int) score, username);
 						}
 					}
 				});
+
 		// Nút Start
-		startButton = new JButton(new ImageIcon(Helper.resizeImage(new ImageIcon(getClass().getResource("/res/start.png")).getImage(), 120, 40)));
-		startButton.setBounds(120, 500, 120, 40); // Tuỳ chỉnh vị trí và kích thước
+		startButton = new JButton(new ImageIcon(Helper.resizeImage(new ImageIcon(getClass().getResource("/res/start.png")).getImage(), 104, 58)));
+		startButton.setBounds(51, 500, 104, 58);
 		startButton.addActionListener((ActionEvent e) -> {
 					startGame();
 				});
+	
+		// Nút Rate
+		rateButton = new JButton(new ImageIcon(Helper.resizeImage(new ImageIcon(getClass().getResource("/res/rate.png")).getImage(), 104, 58)));
+		rateButton.setBounds(206, 500, 104, 58);
+		rateButton.addActionListener((ActionEvent e) -> {
+					showRate();
+				});
+
 		// Bắt buộc để setBounds hoạt động
 		this.setLayout(null);
 		this.add(startButton);
-
+		this.add(rateButton);
 	}
 
 	private void extracted() {
@@ -329,12 +336,12 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 			//Thêm chữ user: "Name" trên góc trái. ĐỔ BÓNG
 			G2D.setColor(Color.DARK_GRAY);
 			G2D.setFont(Helper.loadCustomFont("/t/flappy-font.ttf", 14f));
-			G2D.drawString("USER: " + username , 12, 22);
+			G2D.drawString("USER: " + playerUsername , 12, 22);
 			
 			//Thêm chữ usee: "Name: trên góc trái
 			G2D.setColor(Color.WHITE);
 			G2D.setFont(Helper.loadCustomFont("/t/flappy-font.ttf", 14f));
-			G2D.drawString("USER: " + username , 10, 20);
+			G2D.drawString("USER: " + playerUsername , 10, 20);
 		}
 
 		if (!isGameStarted && !restarting) {
@@ -365,12 +372,12 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 			//Thêm chữ user: "Name" trên góc trái. ĐỔ BÓNG
 			G2D.setColor(Color.DARK_GRAY);
 			G2D.setFont(Helper.loadCustomFont("/t/flappy-font.ttf", 14f));
-			G2D.drawString("USER: " + username , 12, 22);
+			G2D.drawString("USER: " + playerUsername , 12, 22);
 			
 			//Thêm chữ usee: "Name: trên góc trái
 			G2D.setColor(Color.WHITE);
 			G2D.setFont(Helper.loadCustomFont("/t/flappy-font.ttf", 14f));
-			G2D.drawString("USER: " + username , 10, 20);
+			G2D.drawString("USER: " + playerUsername , 10, 20);
 			
 			// Nếu là kỉ lục
 			if (New)

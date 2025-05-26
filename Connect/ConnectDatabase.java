@@ -11,6 +11,9 @@ public class ConnectDatabase {
     private static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=DACS1;encrypt=true;trustServerCertificate=true;";
     private static final String USER = "sa";
     private static final String PASSWORD = "123456789";
+    
+    //Lưu tên đăng nhập
+    public static String currentUsername;
 
     // Bạn có thể giữ lại phương thức main này để kiểm tra độc lập,
     // nhưng nó sẽ không được gọi khi chạy từ DangNhap_DangKi.
@@ -41,7 +44,7 @@ public class ConnectDatabase {
 
     /**
      * Phương thức tĩnh để kiểm tra đăng nhập người dùng với CSDL.
-     * Đây là phương thức mà lớp DangNhap_DangKi sẽ gọi.
+     * Đây là phương thức mà lớp DangNhap và DangKi sẽ gọi.
      * @param username Tên người dùng cần kiểm tra.
      * @param password Mật khẩu của người dùng.
      * @return true nếu tên người dùng và mật khẩu khớp, ngược lại false.
@@ -62,7 +65,14 @@ public class ConnectDatabase {
                 pstmt.setString(2, password);
 
                 ResultSet rs = pstmt.executeQuery();
-                return rs.next(); // true nếu tìm thấy bản ghi (đăng nhập thành công)
+                if( rs.next()) { // true nếu tìm thấy bản ghi (đăng nhập thành công)
+                	ConnectDatabase.currentUsername = username; // cho biến tên đăng nhập = username để gọi bên FlappyBird.java
+                	System.out.println("" + username);
+                	return true;
+                }else {
+                	ConnectDatabase.currentUsername = null; // Đảm bảo reset nếu đăng nhập thất bại
+                    return false;
+                }
 
             } // pstmt và rs sẽ tự động đóng ở đây do try-with-resources
         } catch (SQLException e) {
@@ -137,6 +147,12 @@ public class ConnectDatabase {
             ResultSet rs = pstmt.executeQuery();
             return rs.next(); // true nếu tìm thấy người dùng
         }
+    }
+    
+    public static boolean saveScore(String username, int score) {
+    	String sql = "INSERT INTO Scores (Name, Scores) VALUES (?, ?); ";
+    	
+		return false;
     }
     
 }
