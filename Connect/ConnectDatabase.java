@@ -5,9 +5,13 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class ConnectDatabase {
 
+
+	
     private static final String DB_URL = "jdbc:sqlserver://localhost:1433;databaseName=DACS1;encrypt=true;trustServerCertificate=true;";
     private static final String USER = "sa";
     private static final String PASSWORD = "123456789";
@@ -216,6 +220,25 @@ public class ConnectDatabase {
 	    }
 		return 0;
 	}
+    public static List<PlayerScore> getHighScoreRanking() {
+        List<PlayerScore> highScores = new ArrayList<>();
+        String sqlRankingScore = "SELECT Name, MAX(Score) AS MaxScore FROM Scores GROUP BY Name ORDER BY MaxScore DESC;";
+        
+        try (Connection conn = DriverManager.getConnection(DB_URL, USER, PASSWORD);
+             PreparedStatement pstmt = conn.prepareStatement(sqlRankingScore);
+             ResultSet rs = pstmt.executeQuery()) {
+            
+            while (rs.next()) {
+                String name = rs.getString("Name");
+                int maxScore = rs.getInt("MaxScore");
+                highScores.add(new PlayerScore(name, maxScore));
+            }
+            
+        } catch (SQLException e) {
+            System.err.println("Lỗi khi lấy bảng xếp hạng: " + e.getMessage());
+        }
+        
+        return highScores;
     }
-    
+}
 

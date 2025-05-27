@@ -13,18 +13,27 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.List;
+
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.Timer;
 
 import Connect.ConnectDatabase;
+import Connect.PlayerScore;
 
 
 public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	
+
+	
 	//gọi biến để lưu tên user
 	private String playerUsername;	
+	
+	//Biến khai báo ảnh leaderboard
+	private JLabel leaderboardLabel;
 	
 	JButton startButton;
 	JButton rateButton;
@@ -32,6 +41,23 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	Image fastUp, fastMid, fastDown;
 	Image slowUp, slowMid, slowDown;
 	Image backgroundImg, birdImg, topPipImg, bottomImg;
+	
+	ImageIcon leaderboard;
+	
+	public void initLeaderboard() {
+	    leaderboardLabel = new JLabel();
+	    leaderboardLabel.setBounds(100, 100, 60, 60);  // kích thước đúng với ảnh resize
+	    leaderboard = new ImageIcon(Helper.resizeImage(new ImageIcon(getClass().getResource("/res/leaderboard.png")).getImage(), 60, 60));
+	    leaderboardLabel.setIcon(leaderboard);
+	    leaderboardLabel.setVisible(false);  // ẩn mặc định
+	    add(leaderboardLabel);
+	}
+
+	public void showRate() {
+	    leaderboardLabel.setVisible(true);  // hiện label khi gọi showRate
+	    revalidate();
+	    repaint();
+	}
 
 	boolean restarting = false;
 	boolean New = false;
@@ -108,7 +134,10 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	
 	public void startGame() {
 		
-		if(isGameStarted = true);
+		if(isGameStarted ) return;//Ngăn không cho start khi game đã chạy
+		
+		//Đánh dấu game bắt đầu chạy
+		isGameStarted = true;
 		// Reset trạng thái game
 		bird.y = birdY;
 		v_roi = 0;
@@ -134,12 +163,11 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		repaint();
 	}
 
-	public void showRate() {
-
-	}
+	
 
 	FlappyBird() {
 
+		
 		//gọi lại lớp connect để lấy tên user
 		this.playerUsername = ConnectDatabase.currentUsername;
 		setPreferredSize(new Dimension(360, 640));
@@ -147,6 +175,8 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		setFocusable(true); 
 		// Kiểm tra 3 hàm của keyList khi nhấn phím
 		extracted();
+
+		
 
 		// Animation của Bird lúc chậm (vàng)
 		slowDown = new ImageIcon(getClass().getResource("/res/bird1_yellow.png")).getImage();
@@ -177,7 +207,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 					v_roi += p; // tăng vận tốc rơi
 					bird.y += v_roi; //vị trí của chim sẽ rơi th
 					// Thresshold điểm (quyết định số điểm tối thiểu để chuyển sang màu đỏ)
-					if ((int)score < 20)
+					if ((int)score < 10)
 					{
 						// Animation màu vàng
 						if (v_roi < -5)
@@ -248,6 +278,8 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 							
 							saveCurrentScore();
 							getHighCurrentScore();
+							getHighCurrentScoreRanking();
+							initLeaderboard();
 						
 						
 						// Đổi nút Start thành Restart
@@ -291,9 +323,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		this.add(rateButton);
 	}
 
-	private void extracted() {
-		addKeyListener(this);
-	}
+	
 
 	@Override
 	public void paintComponent(Graphics g){
@@ -451,8 +481,20 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	public void getHighCurrentScore() {
 		bestScore = ConnectDatabase.getHighScore(playerUsername);
 		System.out.println("Điểm cao nhất: " + bestScore + " || User: " + playerUsername);
-		
 	}
+	
+	public void getHighCurrentScoreRanking() {
+		 // Lấy danh sách điểm cao nhất của tất cả người chơi
+        List<PlayerScore> leaderboard = ConnectDatabase.getHighScoreRanking();
+
+        System.out.println("Bảng xếp hạng điểm cao:");
+        int rank = 1;
+        for (PlayerScore ps : leaderboard) {
+            System.out.println(rank + ". " + ps.getName() + " - " + ps.getScore());
+            rank++;
+        }
+	}
+
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
@@ -472,5 +514,8 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	}
 	@Override
 	public void keyReleased(KeyEvent e) {
+	}
+	private void extracted() {
+		addKeyListener(this);
 	}
 }
