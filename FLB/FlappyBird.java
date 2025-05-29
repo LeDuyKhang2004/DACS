@@ -1,69 +1,60 @@
 package FLB;
 
+import Connect.ConnectDatabase;
+import Connect.PlayerScore;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Toolkit;
+import java.awt.datatransfer.Clipboard;
+import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.sql.PseudoColumnUsage;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JLabel;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
+import javax.swing.JScrollBar;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.SwingConstants;
 import javax.swing.Timer;
-
-import Connect.ConnectDatabase;
-import Connect.PlayerScore;
+import javax.swing.table.DefaultTableCellRenderer;
+import javax.swing.table.DefaultTableModel;
 
 
 public class FlappyBird extends JPanel implements ActionListener,KeyListener{
-	
-
-	
-	//gọi biến để lưu tên user
+	// Gọi biến để lưu tên user
 	private String playerUsername;	
 	
-	//Biến khai báo ảnh leaderboard
-	private JLabel leaderboardLabel;
+	// Biến khai báo ảnh leaderboard
 	
-	JButton startButton;
-	JButton rateButton;
+	private JButton startButton, rateButton, menuButton, restartButton, shareButton, okButton;
 	
-	Image fastUp, fastMid, fastDown;
-	Image slowUp, slowMid, slowDown;
+	private Image fastUp, fastMid, fastDown;
+	private Image slowUp, slowMid, slowDown;
 	Image backgroundImg, birdImg, topPipImg, bottomImg;
-	
-	ImageIcon leaderboard;
-	
-	public void initLeaderboard() {
-	    leaderboardLabel = new JLabel();
-	    leaderboardLabel.setBounds(100, 100, 60, 60);  // kích thước đúng với ảnh resize
-	    leaderboard = new ImageIcon(Helper.resizeImage(new ImageIcon(getClass().getResource("/res/leaderboard.png")).getImage(), 60, 60));
-	    leaderboardLabel.setIcon(leaderboard);
-	    leaderboardLabel.setVisible(false);  // ẩn mặc định
-	    add(leaderboardLabel);
-	}
 
-	public void showRate() {
-	    leaderboardLabel.setVisible(true);  // hiện label khi gọi showRate
-	    revalidate();
-	    repaint();
-	}
-
-	boolean restarting = false;
-	boolean New = false;
+	private JScrollPane leaderboardScrollPane;
+	private boolean isPaused = false;
+	private boolean showLeaderboard = false;
+	private boolean New = false;
 
 	
-	int bestScore;
+	private int bestScore;
 
 	// Birds
 	int birdX = 45; // Vị trí của con chim cánh mép trái cửa sổ 45px
@@ -83,16 +74,15 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		}
 	}
 	
-	
-	Bird bird;
+	private Bird bird;
 	
 	// Vòng lặp ống 
-	Timer placePipesTimer;
+	private Timer placePipesTimer;
 	
 	// Vòng lặp game
-	Timer gameLoop;
-	int v_roi = 0;// Vận tốc rơi của chim
-	int p = 1; // Trọng lực
+	private Timer gameLoop;
+	private int v_roi = 0;// Vận tốc rơi của chim
+	private int p = 1; // Trọng lực
 	
 	// Các pipes(ống)
 	int pipeX = 360; // Vị trí ống xuất hiện
@@ -113,29 +103,31 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		}
 	}
 	//Mảng chứa ống
-	ArrayList<Pipe> pipes;
+	private ArrayList<Pipe> pipes;
 	
 	//Dừng lại game
-	Boolean gameOver = false;
+	private Boolean gameOver = false;
 	
 	//
-	Boolean isGameStarted = false;
+	private Boolean isGameStarted = false;
 	//Tính điểm
-	double score = 0; 
+	private double score = 0; 
 	
 	//Tăng thời gian ống chạy nhanh hơn
-	int pipesPassed = 0; //số ống đã vượt qua
-	int pipeSpeed = 7; //tốc độ ban đầu của ống
-	int maxPipeSpeed = 20; // Giới hạn tốc độ ống
-	int pipeInterval = 1500;       // Thời gian xuất hiện ống (ms)
-	int lastSpeedUpdate = 0; // để nhớ lần cuối đã tăng tốc độ
+	private int pipesPassed = 0; //số ống đã vượt qua
+	private int pipeSpeed = 7; //tốc độ ban đầu của ống
+	private int maxPipeSpeed = 20; // Giới hạn tốc độ ống
+	private int pipeInterval = 1500;       // Thời gian xuất hiện ống (ms)
+	private int lastSpeedUpdate = 0; // để nhớ lần cuối đã tăng tốc độ
 
 	
 	
 	public void startGame() {
 		
-		if(isGameStarted ) return;//Ngăn không cho start khi game đã chạy
-		
+		//Ngăn không cho start khi game đã chạy
+		if (isGameStarted ) 
+			return;
+
 		//Đánh dấu game bắt đầu chạy
 		isGameStarted = true;
 		// Reset trạng thái game
@@ -148,6 +140,8 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		pipeSpeed = 4;
 		pipeInterval = 1500;
 		lastSpeedUpdate = 0;
+		showLeaderboard = false;
+		showLeaderboardTable();
 		New = false;
 
 		// Reset Timer
@@ -157,8 +151,11 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 
 		// Ẩn nút Start sau khi nhấn
 		startButton.setVisible(false);
+		restartButton.setVisible(false);
 		rateButton.setVisible(false);
-
+		menuButton.setVisible(false);
+		okButton.setVisible(false);
+		shareButton.setVisible(false);
 		// Gọi repaint để cập nhật lại màn hình
 		repaint();
 	}
@@ -275,21 +272,16 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 						gameLoop.stop();
 						
 						try {
-							
 							saveCurrentScore();
 							getHighCurrentScore();
 							getHighCurrentScoreRanking();
-							initLeaderboard();
-						
-						
-						// Đổi nút Start thành Restart
-						startButton.setIcon(new ImageIcon(Helper.resizeImage(new ImageIcon(getClass().getResource("/res/restart.png")).getImage(), 120, 40)));
 						// Hiện lại nút Start
-						startButton.setVisible(true);
-						startButton.setBounds(120, 500, 120, 40);
-						rateButton.setVisible(false);
-						restarting = true;
-						isGameStarted = false;
+							startButton.setVisible(false);
+							restartButton.setVisible(true);
+							menuButton.setVisible(true);
+							okButton.setVisible(false);
+							isGameStarted = false;
+					
 						// Cập nhật maxScore
 						if ((int) score > bestScore)
 						{
@@ -298,9 +290,9 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 						}
 					
 						} catch (SQLException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}}
+							e1.printStackTrace(System.err);
+						}
+					}
 				});
 
 		// Nút Start
@@ -309,6 +301,13 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		startButton.addActionListener((ActionEvent e) -> {
 					startGame();
 				});
+		
+		restartButton = new JButton(new ImageIcon(Helper.resizeImage(new ImageIcon(getClass().getResource("/res/restart.png")).getImage(), 120, 40)));
+		restartButton.setBounds(120, 500, 120, 40);
+		restartButton.addActionListener((ActionEvent e) -> {
+					startGame();
+				});
+		restartButton.setVisible(gameOver);
 	
 		// Nút Rate
 		rateButton = new JButton(new ImageIcon(Helper.resizeImage(new ImageIcon(getClass().getResource("/res/rate.png")).getImage(), 104, 58)));
@@ -316,11 +315,68 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		rateButton.addActionListener((ActionEvent e) -> {
 					showRate();
 				});
+		
+		menuButton = new JButton(new ImageIcon(Helper.resizeImage(new ImageIcon(getClass().getResource("/res/menu.png")).getImage(), 104, 58)));
+		menuButton.setBounds(120, 560, 120, 40);
+		menuButton.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				isGameStarted = false;
+				gameOver = false;
+				startButton.setVisible(true);
+				restartButton.setVisible(false);
+				rateButton.setVisible(true);
+				menuButton.setVisible(false);
+				okButton.setVisible(false);
+				shareButton.setVisible(true);
+				birdY = 320;
+				v_roi = 0;
+				pipes.clear();
+				score = 0;
+				pipesPassed = 0;
+				pipeSpeed = 7;
+				lastSpeedUpdate = 0;
+				bird = new Bird(birdImg);
+				repaint();
+			}
+			});
+	menuButton.setVisible(gameOver || isPaused);
+	
+	// Nút Okay
+			okButton = new JButton(new ImageIcon(Helper.resizeImage(new ImageIcon(getClass().getResource("/res/ok.png")).getImage(), 120, 40)));
+			okButton.setBounds(120, 440, 120, 40);
+			okButton.addActionListener((ActionEvent e) -> {
+						placePipesTimer.start();
+						gameLoop.start();
+						isPaused = false;
+						restartButton.setVisible(false);
+						menuButton.setVisible(false);
+						okButton.setVisible(false);
+						repaint();
+					});
+			okButton.setVisible(gameOver && isPaused);
+			
+			// Nút Share
+			shareButton = new JButton(new ImageIcon(Helper.resizeImage(new ImageIcon(getClass().getResource("/res/share.png")).getImage(), 120, 40)));
+			shareButton.setBounds(120, 595, 120, 40);
+			shareButton.addActionListener((ActionEvent e) -> {
+						Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
+						StringSelection strSe = new StringSelection("github.com/VagueBassoon586/FlappyBird");
+						clipboard.setContents(strSe, strSe);
+						JOptionPane.showMessageDialog(new JFrame(), "Coppied source to clipboard!", "Notification", JOptionPane.INFORMATION_MESSAGE);
+					});
+			shareButton.setVisible(startButton.isVisible());
 
+
+	
 		// Bắt buộc để setBounds hoạt động
-		this.setLayout(null);
-		this.add(startButton);
-		this.add(rateButton);
+			this.add(startButton);
+			this.add(rateButton);
+			this.add(restartButton);
+			this.add(menuButton);
+			this.add(okButton);
+			this.add(shareButton); // nếu có
 	}
 
 	
@@ -333,7 +389,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 
 		G2D.drawImage(backgroundImg, 0, 0, 360, 640, null);
 
-		if(!isGameStarted && gameOver == false) {
+		if(!isGameStarted && !gameOver) {
 		BufferedImage logo = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/logo.png")).getImage(), 153, 24);
 		G2D.drawImage(logo, 5, 5, null);
 		}
@@ -363,7 +419,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 			G2D.drawImage(pipe.img, pipe.x, pipe.y, pipe.width, pipe.height, null);
 		
 		// Vẽ score (điểm)
-		if (isGameStarted)
+		if (isGameStarted && !showLeaderboard)
 		{
 			// Khởi tạo font chữ
 			G2D.setFont(Helper.loadCustomFont("/t/flappy-font.ttf", 40f));
@@ -386,13 +442,29 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 			G2D.setFont(Helper.loadCustomFont("/t/flappy-font.ttf", 14f));
 			G2D.drawString("USER: " + playerUsername , 10, 20);
 		}
+		
+		if (!isPaused && !gameOver && isGameStarted) {
+			Image stat = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/ClickToStop.png")).getImage(), 30, 30);
+			G2D.drawImage(stat, 320, 10, null);
+		} else if (isPaused && !gameOver && isGameStarted) {
+			Image stat = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/ClickToContinue.png")).getImage(), 30, 30);
+			G2D.drawImage(stat, 320, 10, null);
+		}
 
-		if (!isGameStarted && !restarting) {
+
+
+		if (showLeaderboard) {
+			BufferedImage leaderBoard = null;
+			leaderBoard = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/leaderboard.png")).getImage(), 260, 260);
+			G2D.drawImage(leaderBoard, 50, 150, null);
+		}
+
+		if (!isGameStarted && !gameOver && !showLeaderboard) {
 			BufferedImage getReady = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/getready.png")).getImage(), 260, 60);
 			G2D.drawImage(getReady, 50, 100, null);
 		}
 	
-		else if (!isGameStarted && restarting)
+		else if (!isGameStarted && gameOver && !showLeaderboard)
 		{
 			BufferedImage banner = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/banner.png")).getImage(), 300, 150);
 			BufferedImage title = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/gameover.png")).getImage(), 260, 60);
@@ -427,6 +499,7 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 			{
 				Image newRecord = Helper.resizeImage(new ImageIcon(getClass().getResource("/res/newScore.png")).getImage(), 32, 16);
 				G2D.drawImage(newRecord, 160, 375, null);
+				New = false;
 			}
 
 			// Hiển thị Medal
@@ -486,7 +559,6 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 	public void getHighCurrentScoreRanking() {
 		 // Lấy danh sách điểm cao nhất của tất cả người chơi
         List<PlayerScore> leaderboard = ConnectDatabase.getHighScoreRanking();
-
         System.out.println("Bảng xếp hạng điểm cao:");
         int rank = 1;
         for (PlayerScore ps : leaderboard) {
@@ -495,20 +567,139 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
         }
 	}
 
+	public void showLeaderboardTable() {
+		if (leaderboardScrollPane != null) {
+			leaderboardScrollPane.setVisible(showLeaderboard);
+			return;
+		}
+
+		List<PlayerScore> leaderboard = ConnectDatabase.getHighScoreRanking();
+		// Dummy data
+		
+		String[] columns = {"Rank", "Username", "Score"};
+		DefaultTableModel model = new DefaultTableModel(columns, 0);
+		int rank = 1;
+		for(PlayerScore ps : leaderboard) {
+			Object row[] = new Object[3];
+			row[0] = rank++;
+			row[1] = ps.getName();
+			row[2] = ps.getScore();
+			model.addRow(row);
+		}
+
+		
+		JTable table = new JTable(model) {
+			@Override
+			public boolean isCellEditable(int row, int column) {
+				return false;
+			}
+		};
+
+		// Hide header
+		table.setTableHeader(null);
+
+		// Transparent background
+		table.setOpaque(false);
+		table.setBackground(new Color(0, 0, 0, 0));
+		table.setShowGrid(false);
+		table.setIntercellSpacing(new Dimension(0, 0));
+		table.setForeground(Color.WHITE);
+		table.setFont(Helper.loadCustomFont("/t/flappy-font.ttf", 14));
+		table.setRowHeight(30);
+		table.setFocusable(false);
+		table.setBorder(BorderFactory.createEmptyBorder());
+
+		// === Column alignments ===
+		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+		centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+		table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer); // Rank
+		table.getColumnModel().getColumn(0).setPreferredWidth(30);
+
+		DefaultTableCellRenderer leftRenderer = new DefaultTableCellRenderer();
+		leftRenderer.setHorizontalAlignment(SwingConstants.LEFT);
+		table.getColumnModel().getColumn(1).setCellRenderer(leftRenderer); // Username
+
+		DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
+		rightRenderer.setHorizontalAlignment(SwingConstants.RIGHT);
+		table.getColumnModel().getColumn(2).setCellRenderer(rightRenderer); // Score
+
+		// Create scroll pane and strip all visuals
+		leaderboardScrollPane = new JScrollPane(table);
+		leaderboardScrollPane.setBounds(101, 210, 160, 190);
+		leaderboardScrollPane.setOpaque(false);
+		leaderboardScrollPane.getViewport().setOpaque(false);
+		leaderboardScrollPane.setBorder(BorderFactory.createEmptyBorder());
+		leaderboardScrollPane.setViewportBorder(BorderFactory.createEmptyBorder());
+
+		// Hide scrollbars but keep scrolling
+		JScrollBar vScroll = leaderboardScrollPane.getVerticalScrollBar();
+		vScroll.setPreferredSize(new Dimension(0, 0));
+		vScroll.setOpaque(false);
+		vScroll.setUI(new javax.swing.plaf.basic.BasicScrollBarUI() {
+			@Override protected void configureScrollBarColors() {
+				this.thumbColor = new Color(0, 0, 0, 0);
+				this.trackColor = new Color(0, 0, 0, 0);
+			}
+
+			@Override protected JButton createDecreaseButton(int orientation) {
+				return createZeroButton();
+			}
+
+			@Override protected JButton createIncreaseButton(int orientation) {
+				return createZeroButton();
+			}
+
+			private JButton createZeroButton() {
+				JButton button = new JButton();
+				button.setPreferredSize(new Dimension(0, 0));
+				button.setBorder(BorderFactory.createEmptyBorder());
+				button.setOpaque(false);
+				return button;
+			}
+		});
+
+		// Final container styling
+		setLayout(null);
+		add(leaderboardScrollPane);
+		repaint();
+	}
+	public void showRate() {
+		showLeaderboard = !showLeaderboard;
+		showLeaderboardTable();
+		repaint();
+	}
 	
 	@Override
 	public void actionPerformed(ActionEvent e) {
-		
 	}
 	
 	@Override
 	public void keyPressed(KeyEvent e) {
-		if (!isGameStarted && gameOver && e.getKeyCode() == KeyEvent.VK_R)//ngăn nút space khi game chưa bắt đầu
-			startGame();		
+		if (!isGameStarted && gameOver && e.getKeyCode() == KeyEvent.VK_R)
+			startGame();
+		else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
+			isPaused = !isPaused;
+			if (isPaused && !gameOver && isGameStarted) {
+				restartButton.setVisible(true);
+				menuButton.setVisible(true);
+				okButton.setVisible(true);
+				placePipesTimer.stop();
+				gameLoop.stop();
+			}
+			else if (!isPaused && !gameOver && isGameStarted) {
+				restartButton.setVisible(false);
+				menuButton.setVisible(false);
+				okButton.setVisible(false);
+				placePipesTimer.start();
+				gameLoop.start();
+			}
+			repaint();
+		}
 		else if(isGameStarted && e.getKeyCode() == KeyEvent.VK_SPACE ) 
 			v_roi = -9;
-		
 	}
+
+
 	@Override
 	public void keyTyped(KeyEvent e) {
 	}
@@ -519,3 +710,5 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		addKeyListener(this);
 	}
 }
+// /t/flappy-font.ttf
+// 101, 210, 160, 190

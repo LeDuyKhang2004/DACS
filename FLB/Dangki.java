@@ -3,6 +3,7 @@ package FLB;
 import Connect.ConnectDatabase;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.awt.event.FocusAdapter;
 import java.awt.event.FocusEvent;
 import java.awt.event.MouseAdapter;
@@ -18,7 +19,12 @@ public class Dangki {
 	// Khai báo một đối tượng ConnectDatabase
 	private static ConnectDatabase authManager;
 	
+	public static boolean isValidUsername(String name) {
+	    return name.matches("^[a-zA-Z0-9 ]+$");
+	}
+
 	public static void main(String[] args) {
+		
 		
 		authManager = new ConnectDatabase();
 		
@@ -111,6 +117,7 @@ public class Dangki {
 			Collections.singletonMap(TextAttribute.UNDERLINE, TextAttribute.UNDERLINE_ON)));
 
 		// === FocusListener cho tfName ===
+		// dùng focus để điều khiển hành vi của các ô dữ liệu còn Action là chỉ kích hoạt khi nhấn enter hoặc click nút
 		tfName.addFocusListener(new FocusAdapter() {
 			@Override
 			public void focusGained(FocusEvent e) {
@@ -118,6 +125,7 @@ public class Dangki {
 					tfName.setText("");
 					tfName.setForeground(Color.WHITE);
 					tfName.setBackground(textFieldBgFocus);
+				
 				}
 			}
 
@@ -130,6 +138,7 @@ public class Dangki {
 				}
 			}
 		});
+		
 		
 		// === FocusListener cho tfPassword ===
 		tfPassword.addFocusListener(new FocusAdapter() {
@@ -173,6 +182,11 @@ public class Dangki {
 				JOptionPane.showMessageDialog(frame, "Vui lòng nhập tên người dùng!", "Lỗi", JOptionPane.ERROR_MESSAGE);
 				return;
 			}
+			
+			if(!isValidUsername(newUser)) {
+				JOptionPane.showMessageDialog(frame, "Vui lòng nhập tên người dùng không dấu!");
+				return;
+			}
 			// Kiểm tra xem trường Password có phải là placeholder không
 			if (Newpassword.equals("Password") || Newpassword.isEmpty()) {
 				JOptionPane.showMessageDialog(frame, "Vui lòng nhập mật khẩu!", "Lỗi", JOptionPane.ERROR_MESSAGE);
@@ -195,6 +209,7 @@ public class Dangki {
 				DangNhap.main(args);
 			}
 		});
+		
 
 		pn.add(tfName);
 		pn.add(tfPassword);
