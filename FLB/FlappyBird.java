@@ -714,5 +714,3 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		addKeyListener(this);
 	}
 }
-// /t/flappy-font.ttf
-// 101, 210, 160, 190
