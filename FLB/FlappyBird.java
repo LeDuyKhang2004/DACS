@@ -140,7 +140,6 @@ public class FlappyBird extends JPanel implements ActionListener,KeyListener{
 		pipeInterval = 1500;
 		lastSpeedUpdate = 0;
 		showLeaderboard = false;
-		showLeaderboardTable();
 		New = false;
 
 		// Reset Timer
